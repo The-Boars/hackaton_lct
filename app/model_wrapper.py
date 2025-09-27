@@ -8,7 +8,7 @@ from app.model import ModelPredictor  # <-- твой класс
 class NERModel:
     def __init__(self) -> None:
         project_dir = os.getenv("MODEL_PROJECT_DIR", "./")
-        model_name = os.getenv("MODEL_NAME", "model-78")
+        model_name = os.getenv("MODEL_NAME", "model")
         # Загружаем один раз при старте процесса
         self._predictor = ModelPredictor(project_dir=project_dir, model_name=model_name)
 
