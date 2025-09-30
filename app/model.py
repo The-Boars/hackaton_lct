@@ -1,8 +1,106 @@
 from typing import List
-
+import re
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 
+TOKEN_PATTERN = re.compile(r'\S+')
+def normalize_tag(tag: str) -> str:
+    if not isinstance(tag, str):
+        return 'O'
+    tag = tag.strip()
+    if not tag:
+        return 'O'
+    upper_tag = tag.upper()
+    # keep O as-is; no S/E mapping anymore
+    if upper_tag == 'O':
+        return 'O'
+    # pass B-/I- through, preserving the type suffix
+    if upper_tag.startswith('B-') or upper_tag.startswith('I-'):
+        return tag
+    # anything else is unexpected; return as-is
+    return tag
+
+def is_tag(value) -> bool:
+    if not isinstance(value, str):
+        return False
+    candidate = value.strip().upper()
+    if not candidate:
+        return False
+    if candidate == 'O':
+        return True
+    return (candidate == 'O') or (len(candidate) >= 3 and candidate[1] == '-' and candidate[0] in {'B','I'})
+
+def looks_like_sequence(seq, predicate) -> bool:
+    if not isinstance(seq, (list, tuple)) or not seq:
+        return False
+    return all(predicate(item) for item in seq)
+
+def looks_like_tag_sequence(seq) -> bool:
+    return looks_like_sequence(seq, is_tag)
+
+def looks_like_token_sequence(seq) -> bool:
+    return looks_like_sequence(seq, lambda item: isinstance(item, str) and not is_tag(item))
+
+def extract_tokens_and_tags(prediction) -> tuple[list[str], list[str]]:
+    if isinstance(prediction, tuple):
+        prediction = list(prediction)
+    if not isinstance(prediction, list):
+        raise ValueError(f'Unexpected model output type: {type(prediction)}')
+    tokens: list[str] = []
+    tags: list[str] = []
+
+    def traverse(node):
+        nonlocal tokens, tags
+        if isinstance(node, tuple):
+            node = list(node)
+        if isinstance(node, list):
+            if not tokens and looks_like_token_sequence(node):
+                tokens = [str(item) for item in node]
+            if not tags and looks_like_tag_sequence(node):
+                tags = [normalize_tag(str(item)) for item in node]
+            if tokens and tags:
+                return
+            for child in node:
+                traverse(child)
+
+    traverse(prediction)
+    if not tags:
+        raise ValueError(f'Unable to extract tag sequence from model output: {prediction}')
+    return tokens, tags
+
+def compute_annotation(text: str, tokens: list[str], tags: list[str]) -> list[tuple[int, int, str]]:
+    if not tags:
+        return []
+    if tokens:
+        effective_len = min(len(tokens), len(tags))
+        tokens = tokens[:effective_len]
+        tags = tags[:effective_len]
+    annotation: list[tuple[int, int, str]] = []
+    if tokens:
+        cursor = 0
+        fallback = False
+        for token, tag in zip(tokens, tags):
+            token = token or ''
+            if not tag:
+                cursor += len(token)
+                continue
+            start = text.find(token, cursor)
+            if start == -1:
+                fallback = True
+                break
+            end = start + len(token)
+            annotation.append((start, end, tag))
+            cursor = end
+        if fallback:
+            annotation = []
+    if not annotation:
+        matches = list(TOKEN_PATTERN.finditer(text))
+        effective_len = min(len(matches), len(tags))
+        for match, tag in zip(matches[:effective_len], tags[:effective_len]):
+            if not tag:
+                continue
+            annotation.append((match.start(), match.end(), tag))
+    return annotation
 
 class ModelPredictor:
     __slots__ = ("PROJECT_DIR", "MODEL_NAME", "ner_model")
@@ -42,50 +140,10 @@ class ModelPredictor:
 
         return model_config
 
-    @staticmethod
-    def _locate_token(text: str, token: str, start_pos: int) -> tuple[int, int] | None:
-        if not token:
-            return None
-        length = len(text)
-        pos = start_pos
-        while pos < length and text[pos].isspace():
-            pos += 1
-        if text.startswith(token, pos):
-            start = pos
-            end = start + len(token)
-            return start, end
-        found = text.find(token, pos)
-        if found == -1:
-            found = text.find(token)
-            if found == -1:
-                return None
-        start = found
-        end = start + len(token)
-        return start, end
-
     def _prediction(self, text: str = "") -> List[tuple[int, int, str]]:
-        raw_output = self.ner_model([text])
-        if not isinstance(raw_output, (list, tuple)) or len(raw_output) < 2:
-            raise ValueError(f"Unexpected model output structure: {type(raw_output)}")
-
-        tokens = raw_output[0]
-        tags = raw_output[1]
-
-        if tokens and isinstance(tokens[0], list):
-            tokens = tokens[0]
-        if tags and isinstance(tags[0], list):
-            tags = tags[0]
-
-        annotation: List[tuple[int, int, str]] = []
-        cursor = 0
-        for token, tag in zip(tokens, tags):
-            location = self._locate_token(text, token, cursor)
-            if location is None:
-                continue
-            start, end = location
-            cursor = end
-            if tag and tag != "O":
-                annotation.append((start, end, tag))
+        model_output = self.ner_model([text])
+        tokens, tags = extract_tokens_and_tags(model_output)
+        annotation = compute_annotation(text, tokens, tags)
         return annotation
 
     def _postprocess(self, text: str):

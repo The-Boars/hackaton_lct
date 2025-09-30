@@ -22,10 +22,10 @@ RUN python3 -m deeppavlov install ner_collection3_bert
 # Copy application code
 COPY ./models ./models
 COPY ./app ./app
-RUN python3 -c "from app.model import ModelPredictor; print('Pre-warming model...'); m = ModelPredictor(); print('Pre-warm completed')"
+# RUN python3 -c "from app.model import ModelPredictor; print('Pre-warming model...'); m = ModelPredictor(); print('Pre-warm completed')"
 
 # Expose port
 EXPOSE 8000
 
 # Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "3"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
