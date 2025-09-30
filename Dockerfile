@@ -20,7 +20,8 @@ RUN pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1
 RUN python3 -m deeppavlov install ner_collection3_bert
 
 # Copy application code
-COPY . .
+COPY ./models ./models
+COPY ./app ./app
 RUN python3 -c "from app.model import ModelPredictor; print('Pre-warming model...'); m = ModelPredictor(); print('Pre-warm completed')"
 
 # Expose port
