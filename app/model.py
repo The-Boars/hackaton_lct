@@ -24,6 +24,7 @@ class ModelPredictor():
 
         del model_config['metadata']['download']
 
+        model_config['dataset_reader']['iobes'] = False
         model_config['metadata']['variables']['MODEL_PATH'] = self.PROJECT_DIR + '/models/' + self.MODEL_NAME
 
         model_config['chainer']['pipe'][1]['save_path'] = self.PROJECT_DIR + '/models/tag.dict'
@@ -32,10 +33,16 @@ class ModelPredictor():
         model_config['chainer']['pipe'][2]['save_path'] = self.PROJECT_DIR + '/models/' + self.MODEL_NAME
         model_config['chainer']['pipe'][2]['load_path'] = self.PROJECT_DIR + '/models/' + self.MODEL_NAME
 
-        model_config['train']['batch_size'] = 500
+
+        model_config['train']['batch_size'] = 400
 
         model_config['train']['log_every_n_batches'] = 10
         model_config['train']['val_every_n_batches'] = 10
+
+
+        model_config['chainer']['pipe'][0]['in'] = ['x_tokens']
+        model_config['chainer']['pipe'].insert(0, {"id": "ws_tok", "class_name": "split_tokenizer", "in": ["x"], "out": ["x_tokens"]})
+
 
         return model_config
 

@@ -101,15 +101,6 @@ async def health():
 async def predict(body: PredictIn):
     start_time = time.time()
 
-    if model is None:
-        logger.error(
-            "Model not ready",
-            extra={
-                "extra_fields": {"endpoint": "/api/predict", "execution_time_ms": 0}
-            },
-        )
-        raise HTTPException(status_code=503, detail="Model not ready")
-
     text = (body.input or "").strip()
 
     if not text:

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   ner-app:
     build: .
@@ -10,3 +8,10 @@ services:
       - PREDICT_TIMEOUT_SEC=5.0
       - MAX_INPUT_LEN=512
     restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
