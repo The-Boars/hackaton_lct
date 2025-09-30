@@ -16,3 +16,6 @@ class NERModel:
         # Ожидается формат [{'start_index':..., 'end_index':..., 'entity':...}, ...]
         # Делегируем твоему коду:
         return self._predictor.get_response(text)
+
+
+nermodel=NERModel()

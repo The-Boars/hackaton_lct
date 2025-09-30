@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from app.model_wrapper import NERModel
+from app.model_wrapper import NERModel,nermodel
 
 
 class JSONFormatter(logging.Formatter):
@@ -184,12 +184,6 @@ async def _release_model(instance: NERModel) -> None:
 
 @app.post("/api/predict", response_model=List[EntityOut])
 async def predict(body: PredictIn):
-    if model_queue is None or predict_executor is None:
-        logger.error(
-            "Predict attempted before service ready",
-            extra={"extra_fields": {"endpoint": "/api/predict"}},
-        )
-        raise HTTPException(status_code=503, detail="Model is not ready")
 
     start_time = time.time()
     text = (body.input or "").strip()
@@ -221,18 +215,8 @@ async def predict(body: PredictIn):
             },
         )
 
-    model_instance = await _acquire_model()
-
-    def _infer_sync() -> List[dict]:
-        return model_instance.predict(text)
-
-    loop = asyncio.get_running_loop()
-
     try:
-        result = await asyncio.wait_for(
-            loop.run_in_executor(predict_executor, _infer_sync),
-            timeout=PREDICT_TIMEOUT,
-        )
+        result = nermodel.predict(text)
         execution_time = (time.time() - start_time) * 1000
         logger.info(
             "Predict completed successfully",
