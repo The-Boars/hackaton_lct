@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  ner-app:
+    build: .
+    container_name: ner-container
+    ports:
+      - "8000:8000"
+    environment:
+      - PREDICT_TIMEOUT_SEC=5.0
+      - MAX_INPUT_LEN=512
+    restart: unless-stopped

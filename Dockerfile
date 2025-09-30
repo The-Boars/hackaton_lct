@@ -16,6 +16,7 @@ RUN python -m deeppavlov install ner_collection3_bert
 
 # Copy application code
 COPY . .
+RUN python -c "from app.model import ModelPredictor; print('Pre-warming model...'); m = ModelPredictor(); print('Pre-warm completed')"
 
 # Expose port
 EXPOSE 8000
