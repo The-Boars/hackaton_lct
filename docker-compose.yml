@@ -5,10 +5,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - PREDICT_TIMEOUT_SEC=5.0
       - MAX_INPUT_LEN=512
-      - PREDICT_POOL_SIZE=2
-      - MODEL_POOL_SIZE=1
     restart: unless-stopped
     deploy:
       resources:

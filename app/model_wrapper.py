@@ -1,9 +1,9 @@
-
-from typing import List, Dict, Optional
+from typing import List, Dict
 import os
 
 # Важно: импортируем ровно так, как у тебя в ноутбуке
 from app.model import ModelPredictor  # <-- твой класс
+
 
 class NERModel:
     def __init__(self) -> None:
@@ -16,3 +16,6 @@ class NERModel:
         # Ожидается формат [{'start_index':..., 'end_index':..., 'entity':...}, ...]
         # Делегируем твоему коду:
         return self._predictor.get_response(text)
+
+
+ner_model = NERModel()
