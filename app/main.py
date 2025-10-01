@@ -16,7 +16,14 @@ from app.model_wrapper import ner_model
 MAX_INPUT_LEN = int(os.getenv("MAX_INPUT_LEN", "512"))
 
 
-app = FastAPI(title="NER Service", version="1.0.0")
+tags_metadata = [
+    {"name": "Service", "description": "Технические эндпоинты сервиса (здоровье, версия)."},
+    {"name": "NER", "description": "Распознавание именованных сущностей в тексте."},
+]
+app = FastAPI(title="NER Service", version="1.0.0",
+              description="Сервис распознавания именованных сущностей (BERT/DeepPavlov) на базе FastAPI.",
+              openapi_tags=tags_metadata,
+              )
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,7 +33,7 @@ app.add_middleware(
 )
 
 
-@app.get("/health")
+@app.get("/health", response_model=HealthRs, tags=["Service"], summary="Проверка")
 def health():
     return {"status": "ok"}
 
@@ -46,7 +53,16 @@ class EntityOut(BaseModel):
     entity: str
 
 
-@app.post("/api/predict", response_model=List[EntityOut])
+@app.post("/api/predict", response_model=List[EntityOut],
+          tags=["NER"],
+          summary="Распознавание сущностей (NER)",
+          description="Принимает текст и возвращает список найденных сущностей с позициями.",
+          responses={
+              200: {"description": "Успех: список найденных сущностей (возможно пустой)."},
+              422: {"description": "Ошибка валидации входных данных."},
+              500: {"description": "Внутренняя ошибка инференса."},
+          },
+          )
 async def predict(body: PredictIn):
     # start_time = time.time()
     text = (body.input or "").strip()
