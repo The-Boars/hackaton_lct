@@ -6,6 +6,7 @@ RUN apt-get update && apt install -y python3.10 && apt-get install -y pip
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV UVICORN_WORKERS=3
 
 WORKDIR /app
 
@@ -28,4 +29,4 @@ COPY ./app ./app
 EXPOSE 8000
 
 # Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "3"]
+CMD ["bash","-lc","uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-1}"]

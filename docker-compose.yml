@@ -6,6 +6,7 @@ services:
       - "8000:8000"
     environment:
       - MAX_INPUT_LEN=512
+      - UVICORN_WORKERS=3
     restart: unless-stopped
     deploy:
       resources:
