@@ -29,6 +29,9 @@
 
 ## 3) Быстрый старт
 
+### 0. Подготовка модели
+Необходимо скачать модель по [ссылке](https://disk.yandex.ru/d/KZluVMmhC6fP-g) и расположить ее в папке `models` 
+
 ### Вариант A — Docker (рекомендуется)
 
 1. Установите Docker (и **NVIDIA Container Toolkit**, если хотите использовать GPU).
@@ -172,6 +175,17 @@ curl -X POST "http://localhost:8000/api/predict" \
 │   ├── model_wrapper.py   # Обертка над предиктором (инициализация NER-модели)
 │   ├── model.py           # ModelPredictor: загрузка/вызов DeepPavlov ner_collection3_bert
 │   └── logger.py          # JSON-логирование
+├── models/
+│   ├── model.pth.tar              # Модель
+│   └── tag.dict                   # Словарь тегов
+├── data_flow/          
+│   ├── data_augmentation.ipynb    # Аугментация ОФД сета
+│   ├── data_preparation.ipynb     # Подготовка файлов .txt для обучения модели      
+│   ├── data_preprocessing.ipynb   # Разбиение на тренировочный сет и валидационный
+│   ├── model_prediction.ipynb     # Предсказание моделью     
+│   └── model_training.ipynb       # Обучение модели   
+├── datasets/                      # Папка со всеми наборами данных 
+│   └── . . .
 ├── requirements.txt       # Базовые зависимости (NLP / ML стек)
 ├── Dockerfile             # Образ на nvidia/cuda:11.7.1, подготовка модели, Uvicorn
 └── docker-compose.yml     # Сервис с пробросом порта 8000 и GPU (при наличии)
@@ -181,10 +195,11 @@ curl -X POST "http://localhost:8000/api/predict" \
 
 ## 9) Внешние источники данных и модели
 
-- Предобученная модель **DeepPavlov `ner_collection3_bert`** (BERT‑база для NER). Скачивается и кешируется локально через `python -m deeppavlov install ...`.
+- Предобученная модель **DeepPavlov `ner_collection3_bert`** (BERT‑база для NER на основе `rubert-base-cased`). Скачивается и кешируется локально через `python -m deeppavlov install ...`.
 - Библиотеки **Transformers / Tokenizers / Torch** — используются для инференса.
 - Во время работы веб‑сервиса внешние HTTP‑источники **не вызываются**: инференс локальный по скачанным весам.
-- Обогащение данных датасетом ОФД от Альфа-Банка + ODS
+- Обогащение данных датасетом ОФД от [Альфа-Банка + ODS](https://ods.ai/competitions/alfabank-nlp-receipts-final)
+- [Матрица ошибок](https://arxiv.org/pdf/2105.05977) для моделирования опечаток
 
 > Для полностью офлайн‑развертывания запустите установку модели в окружении с интернетом, сохраните каталоги `~/.deeppavlov` (или путь, заданный `MODEL_PROJECT_DIR`) и смонтируйте их на сервер без интернета.
 
@@ -212,7 +227,7 @@ curl -X POST "http://localhost:8000/api/predict" \
 - *Канев Алексей: Project Manager, ML-Engineer, Data Scientist/ Человек*
 - *Баранов Никита: Backend-разработчик*
 - *Сигитов Артем: Backend-разработчик*
-- *Андриянов Степан: Data Scientist*
+- *Андрианов Степан: Data Scientist*
 - *Третьякова Анастасия: Data Scientist*
 
 
