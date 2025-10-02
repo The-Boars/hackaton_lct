@@ -227,7 +227,7 @@ curl -X POST "http://localhost:8000/api/predict" \
 ## 12) Команда
 
 - *Канев Алексей: Project Manager, ML-Engineer, Data Scientist/ Человек*
-- *Баранов Никита: Backend-разработчик*
+- *Баранов Никита: Fullstack -разработчик*
 - *Сигитов Артем: Backend-разработчик*
 - *Андрианов Степан: Data Scientist*
 - *Третьякова Анастасия: Data Scientist*
