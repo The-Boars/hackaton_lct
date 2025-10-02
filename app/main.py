@@ -33,7 +33,7 @@ app.add_middleware(
 )
 
 
-@app.get("/health", response_model=HealthRs, tags=["Service"], summary="Проверка")
+@app.get("/health", tags=["Service"], summary="Проверка")
 def health():
     return {"status": "ok"}
 
